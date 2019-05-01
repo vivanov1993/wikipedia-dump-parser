@@ -1,6 +1,5 @@
 package io.github.vivanov93.wikipedia.dumps.parser
 
-import java.io.BufferedReader
 import java.io.Closeable
 
 /**
@@ -9,6 +8,6 @@ import java.io.Closeable
 interface CloseableIterator<T> : Closeable, Iterator<T>
 
 /**
- * [BufferedReader.readLine] and [String.trim] sum
+ * [CloseableIterator.next] and [String.trim] sum
  */
-internal fun BufferedReader.readTrimmed() = readLine().trim()
+internal fun Iterator<String>.readTrimmed(): String = next().trim()

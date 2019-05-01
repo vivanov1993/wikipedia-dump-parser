@@ -1,12 +1,11 @@
 package io.github.vivanov93.wikipedia.dumps.parser
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
-import java.io.*
-import java.lang.StringBuilder
+import java.io.BufferedReader
+import java.io.File
 import javax.xml.stream.XMLStreamConstants
 
 //todo consider make FullPages analog with all data from xml
-//todo basic tests and performance metrics
 
 /**
  * Compact variant of wiki page with only [id] field related to metadata
@@ -20,25 +19,50 @@ data class WikiPage(
 
 /**
  * Helper fun to get [WikiPage] by [WikiPageIndex]
+ * note: unpacked not multistream file random access is 3 magnitudes slower
  */
 fun getPageByIndex(dump: File, index: WikiPageIndex): WikiPage {
-    return dump.BZip2at(index).use { s -> s.asPagesIterator().asSequence().find { it.id == index.id } }!!
+    val id = index.id
+    return if (dump.endsWith(".bz2")) {
+        dump.BZip2at(index).use { s -> s.asPagesIterator().asSequence().find { it.id == id } }!!
+    } else {
+        UnpackedDumpIterator(dump).use { iter -> iter.asSequence().find { it.id == id } }!!
+    }
 }
 
+/**
+ * Wrapper around [WikiPagesIterator] to skip meta-info allowing to parse whole unpacked wiki dump
+ */
+class UnpackedDumpIterator(dump: File) : CloseableIterator<WikiPage> {
+
+    private val realIterator: CloseableIterator<WikiPage> = dump.bufferedReader()
+            .skipToLineEndingAs("</siteinfo>")
+            .let { WikiPagesIterator(it) }
+
+    private fun BufferedReader.skipToLineEndingAs(ending: String): BufferedCloseableStringsIterator {
+        val iter = BufferedCloseableStringsIterator(this)
+        iter.skipToLineEndingAs(ending)
+        return iter
+    }
+
+    override fun close() = realIterator.close()
+
+    override fun hasNext(): Boolean = realIterator.hasNext()
+
+    override fun next(): WikiPage = realIterator.next()
+}
 
 /**
  * Iterator over whole dump. It is rather slow due to dump being archive
  * note: dumps should be of relatively new format. Last time functionality checked in april 2019
  * note: closeable!
  *
- * todo performance optimizations
- *
  * @see "https://dumps.wikimedia.org/backup-index.html" for files
  *
  * @param index  relatively small File with titles and pointers, i.e. ruwiki-latest-pages-articles-multistream-index.txt(.bz2)?
  * @param dump - big pages dump File, i.e. ruwiki-latest-pages-articles-multistream.xml.bz2
  */
-class WholeDumpPagesIterator(
+class IndexedDumpIterator(
         index: File,
         /**
          * Reference to main dump file needed for streams recreation
@@ -97,41 +121,30 @@ class WholeDumpPagesIterator(
     }
 
     override fun close() {
-        runCatching { indexes.close() } // todo consider to log
+        runCatching { indexes.close() }
         runCatching { currentPagesIterator.close() }
     }
 }
 
 
 /**
- * Helper func to get [BZip2CompressorInputStream] as [Iterator]
- * note: closeable!
- */
-fun BZip2CompressorInputStream.asPagesIterator(): CloseableIterator<WikiPage> = WikiPagesIterator(this)
-
-/**
  * Iterator over [BZip2CompressorInputStream] as [WikiPage]s
  * note: stream should be untouched after opening and will not be closed by this class
  */
-class WikiPagesIterator(sourceInputStream: BZip2CompressorInputStream)
-    : CloseableIterator<WikiPage>, XMLStreamConstants {
+class WikiPagesIterator(
+        /**
+         * Closeable reader to do low level read operations
+         */
+        private val reader: CloseableIterator<String>
 
-    /**
-     * Reader responsible for stream bytes processing
-     */
-    private val reader = BufferedReader(InputStreamReader(sourceInputStream))
-
-    /**
-     * Read pages counter to do not try to exceed [MAX_PAGES_PER_STREAM] limit
-     */
-    private var readPagesCounter = 0
+) : CloseableIterator<WikiPage>, XMLStreamConstants {
 
     /**
      * Next page pointer
      */
     private var nextPage = readPageInternal()
 
-    override fun hasNext(): Boolean = readPagesCounter < MAX_PAGES_PER_STREAM && nextPage != null
+    override fun hasNext(): Boolean = nextPage != null
 
     override fun next(): WikiPage {
         val currentPage = nextPage
@@ -140,7 +153,6 @@ class WikiPagesIterator(sourceInputStream: BZip2CompressorInputStream)
         } catch (e: Exception) {
             null
         }
-        readPagesCounter++
         return currentPage!!
     }
 
@@ -164,20 +176,22 @@ class WikiPagesIterator(sourceInputStream: BZip2CompressorInputStream)
     }
 
     override fun close() = reader.close()
-
-    companion object {
-        const val MAX_PAGES_PER_STREAM = 100
-    }
 }
 
-private fun BufferedReader.readOneLineTagText(): String {
-    return readLine().substringAfter(">").substringBeforeLast("</")
+private fun Iterator<String>.readOneLineTagText(): String {
+    return next().substringAfter(">").substringBeforeLast("</")
 }
 
 private const val TEXT_TAG_TERMINATOR = "</text>"
+private const val EMPTY_TEXT = "<text xml:space=\"preserve\" />"
 
-private fun BufferedReader.readTextTagText(): String {
+private fun Iterator<String>.readTextTagText(): String {
     var currentLine = readTrimmed()
+
+    // special case - no text
+    if (currentLine == EMPTY_TEXT) {
+        return ""
+    }
 
     // special case - one-line text
     if (currentLine.endsWith(TEXT_TAG_TERMINATOR)) {
@@ -203,6 +217,6 @@ private fun BufferedReader.readTextTagText(): String {
  * note: trimming included
  * note: case sensitive
  */
-private fun BufferedReader.skipToLineEndingAs(ending: String) {
-    while (!readLine().trim().endsWith(ending));
+private fun Iterator<String>.skipToLineEndingAs(ending: String) {
+    while (!next().trim().endsWith(ending));
 }

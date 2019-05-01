@@ -1,12 +1,13 @@
 # JVM wikipeadia dumps parser
 
-Here you can find simple Java/Kotlin API to work with wiki .xml(.bz2) dumps from https://dumps.wikimedia.org/enwiki/latest/.
+Here you can find simple Kotlin/Java library to work with wiki .xml(.bz2) dumps from https://dumps.wikimedia.org/enwiki/latest/.
 Library is written in Kotlin but can be used from pure java code as well
 
 ## Table of content
 
 - [Installation](#installation)
 - [Quickstart](#quickstart)   
+- [More](#more)   
 - [License](#license)
 
 ## Installation
@@ -40,7 +41,7 @@ Check that local maven repo is listed in repositories:
         mavenLocal()
     }
     
-  
+Note: to work with .BZ2 Files https://mvnrepository.com/artifact/org.apache.commons/commons-compress also required
 
 ## Quickstart
 
@@ -67,7 +68,7 @@ public class Main {
 
         // use case: find article by title
         WikiPageIndex javaArticleIndex = null;
-        try (IndexesIterator indexesIterator = IndexesKt.asIndexesIterator(multiStreamIndexesFile)) {
+        try (CloseableIterator<WikiPageIndex> indexesIterator = IndexesKt.asIndexesIterator(multiStreamIndexesFile)) {
             final String titleLike = "Java";
             while (indexesIterator.hasNext()) {
                 final WikiPageIndex wikiPageIndex = indexesIterator.next();
@@ -86,7 +87,7 @@ public class Main {
 
         // use case: iterate over every page in dump
         WikiPage javaPageFromScan = null;
-        try (WholeDumpPagesIterator dumpIterator = new WholeDumpPagesIterator(multiStreamIndexesFile, multiStreamPagesDumpFile)) {
+        try (CloseableIterator<WikiPage> dumpIterator = new IndexedDumpIterator(multiStreamIndexesFile, multiStreamPagesDumpFile)) {
             while (dumpIterator.hasNext()) {
                 final WikiPage somePage = dumpIterator.next();
                 if (somePage.getId() == javaArticleIndex.getId()) {
@@ -120,11 +121,20 @@ fun main() {
     println("Java page by index:\n$javaPageByIndex")
 
     // use case: iterate over every page in dump
-    val javaPageFromScan = WholeDumpPagesIterator(multiStreamIndexesFile, multiStreamPagesDumpFile)
+    val javaPageFromScan = IndexedDumpIterator(multiStreamIndexesFile, multiStreamPagesDumpFile)
             .use { dumpIterator -> dumpIterator.asSequence().find { it.id == javaArticleIndex.id } }
     println("Java page from scan:\n$javaPageFromScan")
 }
 ```
+
+## More
+
+I want to trade memory for performance
+
+- first option is to read whole (unpacked) indexes XML with CloseableIterator<WikiPageIndex> as shown in example
+and keep it in RAM
+- second option is unpack whole XML wiki dump (NOT multistream) and iterate over it with UnpackedDumpIterator
+(no index-based access available)
 
 ## License
 
