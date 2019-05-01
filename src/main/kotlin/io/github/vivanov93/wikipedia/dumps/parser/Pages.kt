@@ -23,7 +23,7 @@ data class WikiPage(
  */
 fun getPageByIndex(dump: File, index: WikiPageIndex): WikiPage {
     val id = index.id
-    return if (dump.endsWith(".bz2")) {
+    return if (dump.name.endsWith(".bz2")) {
         dump.BZip2at(index).use { s -> s.asPagesIterator().asSequence().find { it.id == id } }!!
     } else {
         UnpackedDumpIterator(dump).use { iter -> iter.asSequence().find { it.id == id } }!!
