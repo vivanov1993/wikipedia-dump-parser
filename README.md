@@ -82,7 +82,7 @@ public class Main {
 
         // use case: find page by index
         Objects.requireNonNull(javaArticleIndex);
-        final WikiPage javaPageByIndex = PagesKt.getPageByIndex(multiStreamPagesDumpFile, javaArticleIndex);
+        final WikiPage javaPageByIndex = FacadeKt.getPageByIndex(multiStreamPagesDumpFile, javaArticleIndex);
         System.out.println("Java page by index:\n" + javaPageByIndex);
 
         // use case: iterate over every page in dump
@@ -133,7 +133,7 @@ I want to trade memory for performance
 
 - first option is to read whole (unpacked) indexes XML with CloseableIterator<WikiPageIndex> as shown in example
 and keep it in RAM
-- second option is unpack whole XML wiki dump (NOT multistream) and iterate over it with UnpackedDumpIterator
+- second option is to unpack whole XML wiki dump and iterate over it with UnpackedDumpIterator
 (no index-based access available)
 
 ## License

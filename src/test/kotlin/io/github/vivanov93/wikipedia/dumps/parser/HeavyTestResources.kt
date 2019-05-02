@@ -13,7 +13,5 @@ internal const val BZ2_MULTISTREAM_INDEX_FILE = "P:\\data\\wiki26\\ruwiki-latest
 internal const val UNPACKED_MULTISTREAM_INDEX_FILE = "P:\\data\\wiki26\\ruwiki-latest-pages-articles-multistream-index.txt"
 
 internal const val BZ2_MULTISTREAM_DUMP_FILE = "P:\\data\\wiki26\\ruwiki-latest-pages-articles-multistream.xml.bz2"
-/**
- * Note: NOT multistream
- */
+
 internal const val UNPACKED_DUMP_FILE = "P:\\data\\wiki26\\ruwiki-latest-pages-articles.xml"

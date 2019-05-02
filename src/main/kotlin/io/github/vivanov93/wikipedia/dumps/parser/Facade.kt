@@ -6,7 +6,7 @@ import java.io.File
 
 /**
  * Helper fun to get [WikiPage] by [WikiPageIndex]
- * note: unpacked not multistream file random access is 3 magnitudes slower
+ * note: unpacked file random access is ~3 magnitudes slower
  */
 fun getPageByIndex(dump: File, index: WikiPageIndex): WikiPage {
     val id = index.id

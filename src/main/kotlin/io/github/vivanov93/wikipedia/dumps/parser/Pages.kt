@@ -107,3 +107,24 @@ private fun Iterator<String>.readTextTagText(): String {
 internal fun Iterator<String>.skipToLineEndingAs(ending: String) {
     while (!next().trim().endsWith(ending));
 }
+
+
+/**
+ * Check if this [this] just stub or real article
+ *
+ * @return true if this page just a stub, false if this is real article
+ */
+fun WikiPage.isRedirectPage(): Boolean = text.length < 144 && text.toLowerCase().contains("redirect")
+
+/**
+ * Find [WikiPage.title] on which this [this] redirecting to
+ * Typical redirect text is:
+ * #REDIRECT [[This is title]]
+ */
+fun WikiPage.getRedirectPageTitle(): String {
+    if (isRedirectPage()) {
+        return text.substringAfter("[[").substringBefore("]]")
+    } else {
+        throw  IllegalArgumentException("This is not redirecting page")
+    }
+}
