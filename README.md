@@ -82,7 +82,7 @@ public class Main {
 
         // use case: find page by index
         Objects.requireNonNull(javaArticleIndex);
-        final WikiPage javaPageByIndex = FacadeKt.getPageByIndex(multiStreamPagesDumpFile, javaArticleIndex);
+        final WikiPage javaPageByIndex = TasksKt.getPageByIndex(multiStreamPagesDumpFile, javaArticleIndex);
         System.out.println("Java page by index:\n" + javaPageByIndex);
 
         // use case: iterate over every page in dump

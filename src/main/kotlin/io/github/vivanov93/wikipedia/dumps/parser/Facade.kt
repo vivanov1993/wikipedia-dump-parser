@@ -3,20 +3,6 @@ package io.github.vivanov93.wikipedia.dumps.parser
 import java.io.BufferedReader
 import java.io.File
 
-
-/**
- * Helper fun to get [WikiPage] by [WikiPageIndex]
- * note: unpacked file random access is ~3 magnitudes slower
- */
-fun getPageByIndex(dump: File, index: WikiPageIndex): WikiPage {
-    val id = index.id
-    return if (dump.name.endsWith(".bz2")) {
-        dump.BZip2at(index).use { s -> s.asPagesIterator().asSequence().find { it.id == id } }!!
-    } else {
-        UnpackedDumpIterator(dump).use { iter -> iter.asSequence().find { it.id == id } }!!
-    }
-}
-
 /**
  * Wrapper around [WikiPagesIterator] to skip meta-info allowing to parse whole unpacked wiki dump
  */
