@@ -1,7 +1,8 @@
-package io.github.vivanov93.wikipedia.dumps.parser
+package io.github.vivanov93.wikipedia.dumps.parser.xml
 
+import io.github.vivanov93.wikipedia.dumps.parser.common.CloseableIterator
+import io.github.vivanov93.wikipedia.dumps.parser.common.readTrimmed
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
-import javax.xml.stream.XMLStreamConstants
 
 //todo consider make FullPages analog with all data from xml
 
@@ -24,7 +25,7 @@ class WikiPagesIterator(
          */
         private val reader: CloseableIterator<String>
 
-) : CloseableIterator<WikiPage>, XMLStreamConstants {
+) : CloseableIterator<WikiPage> {
 
     /**
      * Next page pointer

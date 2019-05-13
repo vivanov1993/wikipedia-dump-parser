@@ -1,7 +1,6 @@
-package io.github.vivanov93.wikipedia.dumps.parser
+package io.github.vivanov93.wikipedia.dumps.parser.xml
 
-
-// file to direct test to resources too heavy to be committed in vcs
+// file to direct test to .xml resources too heavy to be committed in vcs
 
 /**
  * bz2 indexes file

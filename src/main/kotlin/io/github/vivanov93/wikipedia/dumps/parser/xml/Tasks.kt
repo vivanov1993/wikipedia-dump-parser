@@ -1,4 +1,4 @@
-package io.github.vivanov93.wikipedia.dumps.parser
+package io.github.vivanov93.wikipedia.dumps.parser.xml
 
 import java.io.File
 

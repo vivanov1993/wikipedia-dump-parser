@@ -1,5 +1,6 @@
-package io.github.vivanov93.wikipedia.dumps.parser
+package io.github.vivanov93.wikipedia.dumps.parser.xml
 
+import io.github.vivanov93.wikipedia.dumps.parser.common.CloseableIterator
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import java.io.File
 
